@@ -1,0 +1,6 @@
+{
+  "name": "Cabegochi",
+  "description": "Compañero virtual conversacional de cotorreo con personalidad traviesa, síntesis de voz, ChuchulucoEngine y memoria viva.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
