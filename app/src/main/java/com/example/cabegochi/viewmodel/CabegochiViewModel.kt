@@ -9,6 +9,8 @@ import com.example.cabegochi.ai.AIResponse
 import com.example.cabegochi.ai.GeminiProvider
 import com.example.cabegochi.memory.CabegochiDatabase
 import com.example.cabegochi.memory.MemoryRepository
+import com.example.cabegochi.memory.MemoryImporter
+
 import com.example.cabegochi.model.CabegochiCharacter
 import com.example.cabegochi.model.ChatMessage
 import com.example.cabegochi.model.CotorreoLevel
@@ -71,6 +73,23 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         }
         val accountId = prefs.getString("account_id", "local") ?: "local"
         repository.setAccountContext(accountId, deviceId)
+
+        // On first run (no interactions) optionally import the large memory asset to seed local cultural memory
+        viewModelScope.launch {
+            val profile = repository.getProfile()
+            if (profile.interactionCount == 0) {
+                try {
+                    repository.importMemoryFromFile(application, application.filesDir.absolutePath + "/MEMORIA_TOTAL.txt")
+                } catch (e: Exception) {
+                    // fallback: import from assets if packaged
+                    try {
+                        MemoryImporter.importFromAssets(application, "MEMORIA_TOTAL.txt", db.cabegochiDao(), accountId, deviceId)
+                    } catch (_: Exception) {
+                        // ignore — importing is best-effort
+                    }
+                }
+            }
+        }
 
         userProfile = repository.userProfileFlow.stateIn(
             scope = viewModelScope,
