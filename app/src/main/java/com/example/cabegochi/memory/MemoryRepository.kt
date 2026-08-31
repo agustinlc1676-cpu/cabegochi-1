@@ -12,6 +12,15 @@ import kotlinx.coroutines.flow.map
 
 class MemoryRepository(private val dao: CabegochiDao) {
 
+    // Current account/device context (defaults to local single-device mode)
+    private var currentAccountId: String = "local"
+    private var currentDeviceId: String = "local"
+
+    fun setAccountContext(accountId: String, deviceId: String) {
+        currentAccountId = accountId
+        currentDeviceId = deviceId
+    }
+
     val userProfileFlow: Flow<UserProfile> = dao.getUserProfileFlow().map { entity ->
         if (entity == null) {
             UserProfile()
@@ -91,6 +100,8 @@ class MemoryRepository(private val dao: CabegochiDao) {
     suspend fun saveProfile(profile: UserProfile) {
         val entity = UserProfileEntity(
             id = 1,
+            accountId = currentAccountId,
+            deviceId = currentDeviceId,
             userNickname = profile.userNickname,
             cabegochiName = profile.cabegochiName,
             selectedCharacterId = profile.selectedCharacter.id,
@@ -108,7 +119,12 @@ class MemoryRepository(private val dao: CabegochiDao) {
     }
 
     suspend fun getRecentMessages(limit: Int = 10): List<ChatMessage> {
-        val entities = dao.getRecentMessages(limit)
+        // Prefer account/device-scoped recent messages when available
+        val entities = try {
+            dao.getRecentMessagesFor(currentAccountId, currentDeviceId, limit)
+        } catch (e: Exception) {
+            dao.getRecentMessages(limit)
+        }
         return entities.reversed().map { entity ->
             ChatMessage(
                 id = entity.id,
@@ -139,6 +155,8 @@ class MemoryRepository(private val dao: CabegochiDao) {
 
     suspend fun addMessage(role: MessageRole, text: String, mood: String? = null): Long {
         val entity = ChatMessageEntity(
+            accountId = currentAccountId,
+            deviceId = currentDeviceId,
             role = role.name,
             text = text,
             timestamp = System.currentTimeMillis(),
@@ -156,6 +174,22 @@ class MemoryRepository(private val dao: CabegochiDao) {
         dao.clearChatHistory()
     }
 
+    // Import large memory file into DB (delegates to MemoryImporter)
+    suspend fun importMemoryFromFile(context: android.content.Context, filePath: String) {
+        MemoryImporter.importFromFile(context, filePath, dao, currentAccountId, currentDeviceId)
+    }
+
+    // Simple diagnostics: counts of memories and messages for current context
+    suspend fun diagnostics(): Map<String, Long> {
+        val memories = try { dao.getAllCulturalMemories().count().toLong() } catch (e: Exception) { 0L }
+        val messages = try { dao.getRecentMessages(1000).size.toLong() } catch (e: Exception) { 0L }
+        return mapOf(
+            "total_memories" to memories,
+            "recent_messages_sample" to messages,
+            "account_id" to 0L
+        )
+    }
+
     suspend fun addOrUpdateMemory(category: MemoryCategory, key: String, content: String) {
         val existing = dao.getCulturalMemoryByKey(key)
         if (existing != null) {
@@ -169,6 +203,8 @@ class MemoryRepository(private val dao: CabegochiDao) {
         } else {
             dao.insertCulturalMemory(
                 CulturalMemoryEntity(
+                    accountId = currentAccountId,
+                    deviceId = currentDeviceId,
                     category = category.name,
                     key = key,
                     content = content,

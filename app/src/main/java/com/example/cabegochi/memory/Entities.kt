@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "user_profile")
 data class UserProfileEntity(
     @PrimaryKey val id: Long = 1,
+    val accountId: String = "local",
+    val deviceId: String = "local",
     val userNickname: String = "Papi",
     val cabegochiName: String = "Traviesón",
     val selectedCharacterId: String = "travieson",
@@ -23,6 +25,8 @@ data class UserProfileEntity(
 @Entity(tableName = "cultural_memory")
 data class CulturalMemoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val accountId: String = "local",
+    val deviceId: String = "local",
     val category: String,
     val key: String,
     val content: String,
@@ -33,6 +37,8 @@ data class CulturalMemoryEntity(
 @Entity(tableName = "chat_messages")
 data class ChatMessageEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val accountId: String = "local",
+    val deviceId: String = "local",
     val role: String,
     val text: String,
     val timestamp: Long = System.currentTimeMillis(),

@@ -62,6 +62,16 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         networkMonitor = NetworkMonitor(application)
         aiProvider = GeminiProvider()
 
+        // Set account/device context: prefer stored device id or generate one
+        val prefs = application.getSharedPreferences("cabegochi_prefs", 0)
+        val deviceId = prefs.getString("device_id", null) ?: kotlin.run {
+            val id = android.provider.Settings.Secure.getString(application.contentResolver, android.provider.Settings.Secure.ANDROID_ID) ?: java.util.UUID.randomUUID().toString()
+            prefs.edit().putString("device_id", id).apply()
+            id
+        }
+        val accountId = prefs.getString("account_id", "local") ?: "local"
+        repository.setAccountContext(accountId, deviceId)
+
         userProfile = repository.userProfileFlow.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
