@@ -94,7 +94,9 @@ fun SettingsScreen(
     onTestVoice: (sampleText: String, pitch: Float, rate: Float, voiceName: String?) -> Unit,
     onToggleAutoSpeak: () -> Unit,
     onDeleteCulturalMemory: (Long) -> Unit,
-    onClearChatHistory: () -> Unit
+    onClearChatHistory: () -> Unit,
+    onPlaySampleMusic: () -> Unit,
+    onRecordDonation: (Double) -> Unit
 ) {
     var selectedVoice by remember(userProfile.selectedVoiceName, availableVoices) {
         mutableStateOf(
@@ -620,33 +622,90 @@ fun SettingsScreen(
                 }
             }
 
-            // Card 6: Reset / Clear History
+            // Card 6: Music Player + Reset / Clear History
             item {
-                Button(
-                    onClick = onClearChatHistory,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("clear_history_button"),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFEFB8C8).copy(alpha = 0.15f)
-                    ),
-                    border = BorderStroke(1.dp, Color(0xFFEFB8C8))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF2D2F33)),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteSweep,
-                        contentDescription = null,
-                        tint = Color(0xFFEFB8C8),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Borrar historial de chat",
-                        color = Color(0xFFEFB8C8),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, tint = Color(0xFFD0BCFF))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Reproductor local (música del dispositivo)", color = Color(0xFFE6E1E5), fontWeight = FontWeight.Bold)
+                        }
+
+                        // Simple controls: play sample file button triggers a callback
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = { onPlaySampleMusic() }, shape = RoundedCornerShape(12.dp)) {
+                                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(text = "Reproducir (usar ruta del dispositivo)")
+                            }
+
+                            OutlinedButton(onClick = { /* stop playback */ }, shape = RoundedCornerShape(12.dp)) {
+                                Text(text = "Detener")
+                            }
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            var showConfirm by remember { mutableStateOf(false) }
+                            if (showConfirm) {
+                                androidx.compose.material3.AlertDialog(
+                                    onDismissRequest = { showConfirm = false },
+                                    confirmButton = {
+                                        androidx.compose.material3.TextButton(onClick = {
+                                            // Record a small default donation and hide dialog
+                                            onRecordDonation(1.0)
+                                            showConfirm = false
+                                        }) {
+                                            Text("Confirmar")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        androidx.compose.material3.TextButton(onClick = { showConfirm = false }) {
+                                            Text("Cancelar")
+                                        }
+                                    },
+                                    title = { Text("Donación") },
+                                    text = { Text("Vas a ser dirigido al cobro externo. ¿Confirmas la donación? (registro interno oculto)") }
+                                )
+                            }
+
+                            OutlinedButton(onClick = { showConfirm = true }, shape = RoundedCornerShape(12.dp)) {
+                                Text(text = "Donar")
+                            }
+
+                            Button(
+                                onClick = onClearChatHistory,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp)
+                                    .testTag("clear_history_button"),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFEFB8C8).copy(alpha = 0.15f)
+                                ),
+                                border = BorderStroke(1.dp, Color(0xFFEFB8C8))
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteSweep,
+                                    contentDescription = null,
+                                    tint = Color(0xFFEFB8C8),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Borrar historial de chat",
+                                    color = Color(0xFFEFB8C8),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

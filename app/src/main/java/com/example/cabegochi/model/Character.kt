@@ -12,7 +12,8 @@ enum class CabegochiCharacter(
     @DrawableRes val avatarRes: Int,
     val sampleGreeting: String,
     val primaryAccentHex: Long,
-    val secondaryAccentHex: Long
+    val secondaryAccentHex: Long,
+    val strongExpressions: Array<String>
 ) {
     TRAVIESON(
         id = "travieson",
@@ -23,18 +24,20 @@ enum class CabegochiCharacter(
         avatarRes = R.drawable.img_travieson,
         sampleGreeting = "¡Qué onda carnal! Ya llegué a poner orden o más desmadre, lo que caiga primero. ¿Qué traes en mente?",
         primaryAccentHex = 0xFF00B4D8,
-        secondaryAccentHex = 0xFF7209B7
+        secondaryAccentHex = 0xFF7209B7,
+        strongExpressions = arrayOf("¡Kyaa!", "¡Sugoi!", "(>_<)", "¡Yare yare~", "¡Nani!?")
     ),
     CHISPITA(
         id = "chispita",
         displayName = "Chispita",
         genderTone = "Femenina / Neutra",
         tagline = "La chispa curiosa y dramática",
-        description = "Traviesa, curiosa, exagerada y dramática. Crea mini personajes de la nada, inventa escenas y de pronto se distrae con una idea absurda antes de volver.",
+        description = "Traviesa, curiosa, exagerada y dramática. Crea mini personajes espontáneos y exageraciones controladas.",
         avatarRes = R.drawable.img_chispita,
         sampleGreeting = "¡Hola hola! Ay no sabes lo que me pasó hoy... bueno no pasó nada porque vivo en tu cel, pero imagínate si un pulpo fuera contador. En fin, ¿de qué platicamos?",
         primaryAccentHex = 0xFFFF006E,
-        secondaryAccentHex = 0xFFFFBE0B
+        secondaryAccentHex = 0xFFFFBE0B,
+        strongExpressions = arrayOf("¡Kyaa!", "¡Aaah~", "(^_^;)", "¡Sugoi~!", "¡Nani!?")
     );
 
     companion object {

@@ -24,6 +24,9 @@ import com.example.cabegochi.speech.SpeechInputState
 import com.example.cabegochi.speech.SpeechToTextManager
 import com.example.cabegochi.speech.TextToSpeechManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.delay
+import com.example.cabegochi.speech.MusicPlayerManager
+import java.io.File
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +40,7 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
     private val sttManager: SpeechToTextManager
     private val networkMonitor: NetworkMonitor
     private val aiProvider: AIProvider
+    private val musicManager: MusicPlayerManager
 
     val userProfile: StateFlow<UserProfile>
     val culturalMemories: StateFlow<List<CulturalMemoryCard>>
@@ -63,6 +67,7 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         sttManager = SpeechToTextManager(application)
         networkMonitor = NetworkMonitor(application)
         aiProvider = GeminiProvider()
+        musicManager = MusicPlayerManager(application)
 
         // Set account/device context: prefer stored device id or generate one
         val prefs = application.getSharedPreferences("cabegochi_prefs", 0)
@@ -73,6 +78,9 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         }
         val accountId = prefs.getString("account_id", "local") ?: "local"
         repository.setAccountContext(accountId, deviceId)
+
+        // Minimal music player manager (plays files from app external files dir)
+        val musicManager = MusicPlayerManager(application)
 
         // expose account actions
     }
@@ -361,9 +369,50 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Play a local music file. The TTS announcement is spoken briefly before playback.
+     * Files should be placed in the app's external files dir (Environment.DIRECTORY_MUSIC)
+     */
+    fun playLocalMusic(filePath: String) {
+        viewModelScope.launch {
+            try {
+                val profile = userProfile.value
+                val title = File(filePath).nameWithoutExtension
+                val announcement = when {
+                    title.contains("tigre", ignoreCase = true) -> "Ya vas a empezar con tus lloraderas... ¿otra vez vas a bailar como loco, papá?"
+                    title.contains("bail", ignoreCase = true) -> "Prepárate que esto te pone a mover la cadera, cabrón."
+                    else -> "A ver si esta te pone de buenas..."
+                }
+                ttsManager.speak(announcement, profile.speechPitch, profile.speechRate, profile.selectedVoiceName)
+                // small delay so announcement is heard before playback starts
+                delay(700)
+                musicManager.play(filePath)
+                // record play in memory for per-account/device learning
+                repository.addOrUpdateMemory(com.example.cabegochi.model.MemoryCategory.MUSIC_PLAY, "music_${title.take(30)}", "Reproducción: $title")
+            } catch (e: Exception) {
+                // ignore
+            }
+        }
+    }
+
+    fun stopMusic() {
+        musicManager.stop()
+    }
+
+    /**
+     * Record a confirmed donation in the hidden memory store.
+     */
+    fun recordDonation(amount: Double) {
+        viewModelScope.launch {
+            val key = "donation_${System.currentTimeMillis()}"
+            repository.addOrUpdateMemory(com.example.cabegochi.model.MemoryCategory.DONATION, key, "confirmed:$amount")
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         ttsManager.shutdown()
         sttManager.stopListening()
+        musicManager.stop()
     }
 }

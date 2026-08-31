@@ -7,7 +7,9 @@ enum class MemoryCategory {
     RECURRING_CHARACTER,
     CALLBACK,
     PREFERRED_HUMOR_PATTERN,
-    DISLIKED_PATTERN
+    DISLIKED_PATTERN,
+    MUSIC_PLAY,
+    DONATION
 }
 
 data class CulturalMemoryCard(

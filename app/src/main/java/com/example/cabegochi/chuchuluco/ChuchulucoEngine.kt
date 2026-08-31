@@ -180,27 +180,30 @@ object ChuchulucoEngine {
                 else -> null
             }
             if (result != null) {
-                return when (character) {
+                val base = when (character) {
                     CabegochiCharacter.TRAVIESON -> "$result... y ni me despeiné la neurona, ${userProfile.userNickname}."
                     CabegochiCharacter.CHISPITA -> "$result! Ay qué estrés los números, sentí que me salía humo por los circuitos."
                 }
+                return appendExpression(base, character, cotorreoLevel)
             }
         }
 
         // 2. Greetings
         if (lower.contains("hola") || lower.contains("que onda") || lower.contains("quiubo") || lower.contains("buenas")) {
-            return when (character) {
+            val base = when (character) {
                 CabegochiCharacter.TRAVIESON -> "¡Quiúbole ${userProfile.userNickname}! ¿Qué se arma hoy? ¿Vamos a arreglar el mundo o a desconfigurarlo más?"
                 CabegochiCharacter.CHISPITA -> "¡Holaaa ${userProfile.userNickname}! Estaba aquí pensando en si los satélites sueñan con ovejas de titanio... ¿qué traes de chisme?"
             }
+            return appendExpression(base, character, cotorreoLevel)
         }
 
         // 3. Who are you
         if (lower.contains("quien eres") || lower.contains("como te llamas") || lower.contains("que eres")) {
-            return when (character) {
+            val base = when (character) {
                 CabegochiCharacter.TRAVIESON -> "Soy ${userProfile.cabegochiName}, tu Cabegochi de cabecera. Mitad código rebelde, mitad bot con ganas de cotorrear."
                 CabegochiCharacter.CHISPITA -> "¡Soy ${userProfile.cabegochiName}! Tu compañerita de bolsillo favorita, experta en dramatismo y teorías conspirativas de la cafetera."
             }
+            return appendExpression(base, character, cotorreoLevel)
         }
 
         // 4. Memory callback integration
@@ -213,7 +216,7 @@ object ChuchulucoEngine {
         val objeto = personifiedObjects.random()
         val remate = if (character == CabegochiCharacter.TRAVIESON) quickRematesTravieson.random() else quickRematesChispita.random()
 
-        return when (character) {
+        val base = when (character) {
             CabegochiCharacter.TRAVIESON -> {
                 when (cotorreoLevel) {
                     CotorreoLevel.CASI_SERIO -> "Enterado sobre '$trimmed', $nickname. Se toma nota y seguimos en marcha."
@@ -248,5 +251,22 @@ object ChuchulucoEngine {
                 }
             }
         }
+        return appendExpression(base, character, cotorreoLevel)
+    }
+
+    // Public helper: occasionally append a short anime-style expression for high-intensity remates
+    fun appendExpression(base: String, character: CabegochiCharacter, level: CotorreoLevel): String {
+        val chance = when (level) {
+            CotorreoLevel.DESMADRE_ALTO -> 0.6
+            CotorreoLevel.CABEGOCHI_NORMAL -> 0.15
+            else -> 0.05
+        }
+        if (Random.nextDouble() > chance) return base
+        val exprs = character.strongExpressions
+        if (exprs.isEmpty()) return base
+        val chosen = exprs.random()
+        // Append with a small separator to keep speech synthesis tidy
+        return "$base  $chosen"
     }
 }
+

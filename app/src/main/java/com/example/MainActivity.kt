@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import android.os.Environment
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +57,11 @@ fun CabegochiApp(viewModel: CabegochiViewModel) {
     val currentOfflineQuote by viewModel.currentOfflineQuote.collectAsState()
 
     var currentScreen by remember { mutableStateOf(AppScreen.CHAT) }
+
+    // Compute an available sample music file path (first mp3/m4a/wav) in app external music dir
+    val ctx = LocalContext.current
+    val musicDir = ctx.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+    val firstMusicPath = remember(musicDir) { musicDir?.listFiles()?.firstOrNull { it.isFile && (it.extension.equals("mp3", true) || it.extension.equals("m4a", true) || it.extension.equals("wav", true)) }?.absolutePath }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         when {
@@ -109,7 +116,13 @@ fun CabegochiApp(viewModel: CabegochiViewModel) {
                     },
                     onToggleAutoSpeak = { viewModel.toggleAutoSpeak() },
                     onDeleteCulturalMemory = { viewModel.deleteCulturalMemory(it) },
-                    onClearChatHistory = { viewModel.clearChatHistory() }
+                    onClearChatHistory = { viewModel.clearChatHistory() },
+                    onPlaySampleMusic = {
+                        // Play first detected file (computed earlier)
+                        // 'firstMusicPath' is captured from composable scope
+                        firstMusicPath?.let { viewModel.playLocalMusic(it) }
+                    },
+                    onRecordDonation = { amount -> viewModel.recordDonation(amount) }
                 )
             }
 
