@@ -215,6 +215,25 @@ class MemoryRepository(private val dao: CabegochiDao) {
         }
     }
 
+    // Account management wrappers (thin): create account, request otp, verify otp
+    suspend fun createAccount(email: String?, phone: String?): String {
+        val manager = AccountManager(dao)
+        val acc = manager.createAccount(email, phone)
+        // persist account id in a cultural memory entry for discoverability
+        addOrUpdateMemory(MemoryCategory.CALLBACK, "account_${acc.id}", "account:${acc.id}")
+        return acc.id
+    }
+
+    suspend fun requestOtp(accountId: String): String {
+        val manager = AccountManager(dao)
+        return manager.requestOtpFor(accountId)
+    }
+
+    suspend fun verifyOtp(accountId: String, otp: String): Boolean {
+        val manager = AccountManager(dao)
+        return manager.verifyOtp(accountId, otp)
+    }
+
     /**
      * Basic explanation-based pattern learner for V0.1:
      * - Identifies recurrent nicknames (e.g. "papi", "jefe", "carnal", "compa")

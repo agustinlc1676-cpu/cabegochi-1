@@ -74,6 +74,51 @@ class CabegochiViewModel(application: Application) : AndroidViewModel(applicatio
         val accountId = prefs.getString("account_id", "local") ?: "local"
         repository.setAccountContext(accountId, deviceId)
 
+        // expose account actions
+    }
+
+    // Account flow wrappers
+    fun createAccount(email: String?, phone: String?, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val id = repository.createAccount(email, phone)
+                // persist accountId in prefs
+                val prefs = getApplication<Application>().getSharedPreferences("cabegochi_prefs", 0)
+                prefs.edit().putString("account_id", id).apply()
+                repository.setAccountContext(id, prefs.getString("device_id", "local") ?: "local")
+                onResult(id)
+            } catch (e: Exception) {
+                onResult(null)
+            }
+        }
+    }
+
+    fun requestOtp(accountId: String, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val otp = repository.requestOtp(accountId)
+                onResult(otp)
+            } catch (e: Exception) {
+                onResult(null)
+            }
+        }
+    }
+
+    fun verifyOtp(accountId: String, otp: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val ok = repository.verifyOtp(accountId, otp)
+                if (ok) {
+                    val prefs = getApplication<Application>().getSharedPreferences("cabegochi_prefs", 0)
+                    prefs.edit().putString("account_id", accountId).apply()
+                    repository.setAccountContext(accountId, prefs.getString("device_id", "local") ?: "local")
+                }
+                onResult(ok)
+            } catch (e: Exception) {
+                onResult(false)
+            }
+        }
+    }
         // On first run (no interactions) optionally import the large memory asset to seed local cultural memory
         viewModelScope.launch {
             val profile = repository.getProfile()

@@ -79,7 +79,8 @@ fun OnboardingScreen(
         pitch: Float,
         rate: Float
     ) -> Unit,
-    onTestVoice: (sampleText: String, pitch: Float, rate: Float, voiceName: String?) -> Unit
+    onTestVoice: (sampleText: String, pitch: Float, rate: Float, voiceName: String?) -> Unit,
+    viewModel: com.example.cabegochi.viewmodel.CabegochiViewModel
 ) {
     var selectedCharacter by remember { mutableStateOf(CabegochiCharacter.TRAVIESON) }
     var cabegochiName by remember { mutableStateOf("Traviesón") }
@@ -476,6 +477,25 @@ fun OnboardingScreen(
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
+            }
+        }
+
+        // Account Registration entry
+        item {
+            var showRegistration by remember { mutableStateOf(false) }
+            if (showRegistration) {
+                AccountRegistrationScreen(
+                    viewModel = viewModel,
+                    onDone = { accountId ->
+                        showRegistration = false
+                        // accountId already stored by viewModel; nothing else to do here
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                OutlinedButton(onClick = { showRegistration = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Registrar cuenta (correo/telefono) (opcional)")
                 }
             }
         }

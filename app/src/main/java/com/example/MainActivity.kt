@@ -74,7 +74,8 @@ fun CabegochiApp(viewModel: CabegochiViewModel) {
                     },
                     onTestVoice = { sampleText, pitch, rate, voiceName ->
                         viewModel.testVoice(sampleText, pitch, rate, voiceName)
-                    }
+                    },
+                    viewModel = viewModel
                 )
             }
 
